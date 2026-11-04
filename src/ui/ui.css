@@ -1,0 +1,43 @@
+/* Everything is sized from the window width, so it reads the same from across the room at any resolution. */
+:root { color-scheme: dark; --bg: #101318; --card: #1b2230; --tile: #2a3446; --accent: #2f7fe0; --blue: #4da3ff; --text: #fff; --dim: #9fb3c8; --dimmer: #6b7d92; }
+* { box-sizing: border-box; }
+html { font-size: 1.35vw; }
+html, body { margin: 0; height: 100%; background: transparent; color: var(--text); font-family: system-ui, "Noto Color Emoji", sans-serif; overflow: hidden; }
+.layer[hidden] { display: none !important; }
+button { font: inherit; color: inherit; border: 0; cursor: pointer; }
+button:focus, .tile:focus { outline: none; }
+.f { transition: transform .1s, background-color .1s; }
+.f:focus { background: var(--accent) !important; box-shadow: 0 0 0 .25rem #fff; transform: scale(1.06); position: relative; z-index: 1; }
+
+#start { position: fixed; inset: 0; background: var(--bg); overflow-y: auto; padding: 1.5rem 2.2rem; }
+#start h1 { font-size: 1.4rem; font-weight: 400; color: var(--dim); margin: 0 0 .8rem; text-align: center; }
+#start .search { display: block; width: 100%; height: 4rem; margin-bottom: 1rem; border-radius: .9rem; background: var(--tile); font-size: 1.2rem; }
+#start .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+#start .bookmark { display: flex; flex-direction: column; aspect-ratio: 4 / 3.4; padding: .5rem; border-radius: .9rem; background: var(--card); min-width: 0; text-align: left; }
+#start .bookmark img, #start .bookmark .letter { flex: 1; min-height: 0; width: 100%; border-radius: .5rem; object-fit: cover; }
+#start .bookmark .letter { display: flex; align-items: center; justify-content: center; font-size: 3rem; }
+#start .bookmark .name { padding: .4rem .25rem 0; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#start .hint { margin-top: 1.2rem; color: var(--dimmer); font-size: .9rem; text-align: center; }
+
+#address { position: fixed; top: 0; left: 0; right: 0; padding: 1.5rem 2.5rem; background: var(--bg); }
+input[type=text] { width: 100%; font: inherit; font-size: 1.4rem; color: #fff; background: #0c0f14; border: .2rem solid var(--blue); border-radius: .75rem; padding: .75rem 1.1rem; outline: none; }
+#address .hint { margin-top: .6rem; color: var(--dimmer); font-size: .9rem; }
+
+#menu { position: fixed; inset: 0; background: #000000dd; display: flex; align-items: center; justify-content: center; }
+#menu .grid { display: grid; grid-template-columns: repeat(5, 11rem); gap: 1rem; }
+#menu .tile { height: 7.5rem; border-radius: .9rem; background: var(--tile); font-size: 1.05rem; padding: .4rem; }
+#menu .sym { display: block; font-size: 1.8rem; margin-bottom: .2rem; }
+
+#dialog { position: fixed; inset: 0; background: #0000008c; display: flex; align-items: center; justify-content: center; }
+.box { width: 46rem; max-height: 85vh; display: flex; flex-direction: column; gap: .5rem; padding: 1.3rem; border-radius: 1rem; background: var(--card); box-shadow: 0 1rem 3rem #000; }
+.box h2 { margin: 0 0 .4rem; font-size: 1.15rem; font-weight: 600; overflow-wrap: anywhere; }
+.box .items { display: flex; flex-direction: column; gap: .4rem; overflow-y: auto; padding: .4rem; }
+.box .item { width: 100%; padding: .8rem 1rem; border-radius: .6rem; background: var(--tile); font-size: 1.05rem; text-align: left; overflow-wrap: anywhere; }
+.box .item.check::before { content: "☐  "; }
+.box .item.check.on::before { content: "☑  "; }
+.box .message { white-space: pre-wrap; overflow-y: auto; color: var(--dim); font-size: .95rem; overflow-wrap: anywhere; }
+.box .row { display: flex; gap: .6rem; padding: .4rem; }
+.box .row .item { text-align: center; }
+.pair { display: flex; gap: 1.5rem; align-items: center; }
+.pair img { width: 15rem; height: 15rem; flex: none; background: #fff; border-radius: .4rem; image-rendering: pixelated; }
+.pair .message { color: #fff; }

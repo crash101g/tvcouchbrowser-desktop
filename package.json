@@ -1,0 +1,13 @@
+{
+  "name": "tvcouchbrowser",
+  "productName": "TVCouchBrowser",
+  "version": "0.2.0",
+  "description": "A couch browser for Linux and macOS: blocks ads, works with a remote, and lets you type from your phone.",
+  "main": "src/main.js",
+  "license": "MIT",
+  "electronVersion": "44.10.1+wvcus",
+  "scripts": {
+    "start": "./run.sh",
+    "test": "./test/run.sh"
+  }
+}

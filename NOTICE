@@ -1,0 +1,22 @@
+TVCouchBrowser for Linux and macOS
+==================================
+
+A port to Pop!_OS / Ubuntu and macOS of TVCouchBrowser for Android TV by crash101g
+(https://github.com/crash101g/tvcouchbrowser), released under the MIT License (see LICENSE).
+Copyright (c) 2026 crash101g.
+
+Runtime (downloaded when building or first running; not part of this source tree)
+- Electron for Content Security (castLabs), based on Electron and Chromium, MIT and others,
+  https://github.com/castlabs/electron-releases . Its own license files ship in the runtime folder.
+- Widevine CDM, downloaded by the runtime from Google on first use; subject to Google's terms.
+
+Bundled third-party code
+- qrcode-generator by Kazuhiko Arase, MIT License, https://github.com/kazuhikoarase/qrcode-generator
+
+Filter lists (downloaded by the app at run time from their publishers, not bundled)
+- EasyList and EasyPrivacy, https://easylist.to/ , dual licensed GPL-3.0-or-later and CC BY-SA 3.0
+- uBlock Origin filters and uBlock filters – Privacy, https://github.com/uBlockOrigin/uAssets , GPL-3.0
+
+The blocking engine in src/filter-parser.js and src/adblocker.js is an original, simplified implementation
+of the Adblock Plus / uBlock Origin filter syntax. It is not uBlock Origin and does not contain uBlock
+Origin code.

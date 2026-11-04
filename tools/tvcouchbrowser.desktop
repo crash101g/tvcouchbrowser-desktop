@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=TVCouchBrowser
+GenericName=Couch Web Browser
+Comment=Browse from the couch: blocks ads, works with a remote, type from your phone
+Exec=tvcouchbrowser %U
+Icon=tvcouchbrowser
+Terminal=false
+Categories=Network;WebBrowser;AudioVideo;
+StartupWMClass=tvcouchbrowser
