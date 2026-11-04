@@ -7,6 +7,7 @@ const PALETTE = ['#2F7FE0', '#7A4FD1', '#1F9D8B', '#D1693A', '#B8417A'];
 const HOLD_MS = 500;
 
 let state = {};
+let barClicked = false;
 const lastFocus = {}; // layer -> data-key of the element that last had focus
 
 const el = (tag, cls, text) => {
@@ -72,7 +73,21 @@ function drawAddress(s, box) {
   box.append(textField('addr', s.value, (v) => tv.act('address', 0, v)));
   box.append(el('div', 'hint', 'Type here, or use "Open on TV" on your phone. Enter to go, Esc to cancel.'));
   lastFocus.address = 'addr';
+  barClicked = false;
 }
+
+// A bar the mouse opened closes when the mouse leaves it, unless it has been clicked or typed in.
+document.addEventListener('mousemove', (e) => {
+  if (topLayer() !== 'address' || !state.address.hover || barClicked || $('address').contains(e.target)) return;
+  if ($('addr').value === state.address.value) tv.act('address');
+});
+
+// Clicking outside closes any bar.
+document.addEventListener('mousedown', (e) => {
+  if (topLayer() !== 'address') return;
+  if ($('address').contains(e.target)) barClicked = true;
+  else tv.act('address');
+});
 
 function drawDialog(d, box) {
   const b = el('div', 'box');

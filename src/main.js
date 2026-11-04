@@ -20,6 +20,7 @@ const HOLD_BACK_MS = 600;
 const PAD_SCROLL_GAIN = 2.5;
 const MIN_ZOOM = 0.25, MAX_ZOOM = 5;
 const CURSOR_W = 30, CURSOR_H = 42;
+const TOP_EDGE = 3; // the mouse this close to the top of the window shows the address bar
 const DIRS = ['up', 'down', 'left', 'right'];
 const ARROWS = { ArrowUp: 0, ArrowDown: 1, ArrowLeft: 2, ArrowRight: 3 };
 const SEARCH_ENGINES = [
@@ -59,6 +60,9 @@ let pointerUntil = 0;
 let pointerTimer = null;
 let scale = 1; // window pixels per upstream "dp": sizes were tuned on a 1280-wide TV
 let keepAwake = null;
+let injecting = false; // this app is sending input, as the remote or phone pointer
+let mouseHeld = false;
+let mouseAtTop = true; // until seen lower down: a view that appears reports the mouse where it already is
 
 // ---- small helpers ------------------------------------------------------------------------------
 
@@ -77,7 +81,9 @@ function toast(text) {
 }
 
 function send(wc, ...events) {
-  if (!wc.isDestroyed()) for (const ev of events) wc.sendInputEvent(ev);
+  if (wc.isDestroyed()) return;
+  injecting = true; // before-mouse-event sees these too, and fires during sendInputEvent
+  try { for (const ev of events) wc.sendInputEvent(ev); } finally { injecting = false; }
 }
 
 /** Calls a function in the page script's `api`, in the top frame. Resolves null if the page can't answer. */
@@ -125,6 +131,7 @@ function createView(t) {
   t.view = view;
   wc.setUserAgent(uaFor(t.url));
   wc.on('before-input-event', (e, input) => onInput(e, input));
+  wc.on('before-mouse-event', (_e, event) => onMouse(event));
   wc.setWindowOpenHandler(({ url }) => {
     // Without a recent click these are pop-ups and pop-unders.
     if (Date.now() - t.lastGesture < GESTURE_MS) { t.lastGesture = 0; newWindow(t, url); } // one click, one window
@@ -333,7 +340,7 @@ function render() {
   };
   uiView.webContents.send('ui:render', s);
   uiView.setVisible(overlayShown());
-  if (overlayShown()) uiView.webContents.focus();
+  if (overlayShown()) { uiView.webContents.focus(); mouseHeld = false; } // the release goes to the overlay
   else tab().view?.webContents.focus();
   screens.startFocus = null;
 }
@@ -460,9 +467,10 @@ function closeMenu() {
   updateCursor();
 }
 
-function openAddress() {
+/** `hover`: opened by the mouse, so it goes away when the mouse does, unless it has been used. */
+function openAddress(hover = false) {
   screens.menu = null;
-  screens.address = { value: screens.start ? '' : tab().url || '' };
+  screens.address = { value: screens.start ? '' : tab().url || '', hover };
   render();
   updateCursor();
 }
@@ -471,6 +479,11 @@ function closeAddress() {
   screens.address = null;
   render();
   updateCursor();
+}
+
+function toggleAddress() {
+  if (screens.address) closeAddress();
+  else if (!screens.dialog && !fullscreen) openAddress();
 }
 
 function tabsDialog() {
@@ -617,6 +630,7 @@ function onInput(e, input) {
   const command = commandHeld(input);
   if (down && command && (key === 'q' || key === 'Q')) { e.preventDefault(); app.quit(); return; }
   if (down && command && (key === 'l' || key === 'L')) { e.preventDefault(); openAddress(); return; }
+  if (key === 'F6') { e.preventDefault(); if (down && !input.isAutoRepeat) toggleAddress(); return; }
   if (down && (key === 'F5' || (command && (key === 'r' || key === 'R')))) { e.preventDefault(); t.view?.webContents.reload(); return; }
   if (input.control || input.alt || input.meta) return;
 
@@ -681,6 +695,18 @@ function onInput(e, input) {
     if (cursorMode) { if (down && !input.isAutoRepeat) pressDir(dir); else if (!down) releaseDir(dir); }
     else if (down) call(t, 'nav', DIRS[dir]);
   }
+}
+
+/** A real mouse moving up to the top of the window shows the address bar, once per visit to the edge. */
+function onMouse({ type, y }) {
+  if (injecting) return;
+  if (type === 'mouseDown') mouseHeld = true;
+  if (type === 'mouseUp') mouseHeld = false;
+  if (type !== 'mouseMove') return;
+  const arrived = y <= TOP_EDGE && !mouseAtTop;
+  mouseAtTop = y <= TOP_EDGE;
+  // Not while dragging, typing into the page, or over full-screen video.
+  if (arrived && !mouseHeld && !fullscreen && !tab().editing && !overlayShown() && browsing()) openAddress(true);
 }
 
 function goBack() {

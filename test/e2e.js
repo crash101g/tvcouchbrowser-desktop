@@ -311,6 +311,66 @@ async function run(a) {
   key('Escape');
   await until(() => !a.screens.dialog);
 
+  // ---- address bar: the top edge of the window, and F6
+  const shown = () => a.tab().url;
+  a.load(`${base}/two`);
+  await until(async () => (await pageJs('document.title').catch(() => '')) === 'Two');
+  const wc = a.tab().view.webContents;
+  const realMouse = (y, type = 'mouseMove') => wc.sendInputEvent({ type, x: 600, y, ...(type === 'mouseMove' ? {} : { button: 'left', clickCount: 1 }) });
+  const uiMouse = (y, type = 'mouseMove') => a.uiView.webContents.sendInputEvent({ type, x: 600, y, ...(type === 'mouseMove' ? {} : { button: 'left', clickCount: 1 }) });
+  const closeBar = async () => { key('Escape'); await until(() => !a.screens.address); };
+  realMouse(0);
+  check('a mouse already at the top when the page appears does nothing', !a.screens.address);
+  realMouse(300);
+  check('the bar is hidden away from the top', !a.screens.address);
+  realMouse(0);
+  check('the mouse at the top shows the URL', a.screens.address?.value === shown() && a.screens.address.hover === true, a.screens.address);
+  await until(() => uiJs(`document.getElementById('addr')?.value`).then((v) => v === shown()));
+  check('the bar shows the page address', await uiJs(`document.getElementById('addr').value`) === shown());
+  uiMouse(20);
+  await sleep(150);
+  check('the bar stays while the mouse is on it', !!a.screens.address);
+  uiMouse(500);
+  await until(() => !a.screens.address);
+  check('the bar closes when the mouse leaves', !a.screens.address);
+  realMouse(300); realMouse(0);
+  await until(() => uiJs(`!!document.getElementById('addr')`));
+  await uiJs(`document.getElementById('addr').value += 'x'; 0`);
+  uiMouse(500);
+  await sleep(200);
+  check('a bar with typing stays when the mouse leaves', !!a.screens.address);
+  uiMouse(500, 'mouseDown'); uiMouse(500, 'mouseUp');
+  await until(() => !a.screens.address);
+  check('a click outside closes it', !a.screens.address);
+  realMouse(300); realMouse(0);
+  await closeBar();
+  realMouse(1);
+  check('Esc is not undone while the mouse stays at the top', !a.screens.address);
+  // Showing the pointer view makes Chromium re-report the hardware cursor, which is 0,0 on the hidden display
+  // whatever was simulated here. So it goes up first, and the mouse is placed below the edge after that.
+  a.actions.pointer({ op: 'm', a: 0, b: 40 });
+  await sleep(150);
+  realMouse(300);
+  a.actions.pointer({ op: 'm', a: 0, b: -3000 }); a.actions.pointer({ op: 'm', a: 0, b: -3000 });
+  await sleep(100);
+  check('the phone pointer at the top leaves the bar alone', a.pointer.y === 0 && !a.screens.address, a.pointer);
+  key('ArrowUp'); await sleep(60);
+  check('the remote pointer at the top leaves the bar alone', !a.screens.address);
+  realMouse(300, 'mouseDown'); realMouse(0); realMouse(300); realMouse(300, 'mouseUp');
+  check('dragging to the top leaves the bar alone', !a.screens.address);
+  a.tab().editing = true;
+  realMouse(0); realMouse(300);
+  a.tab().editing = false;
+  check('typing in the page leaves the bar alone', !a.screens.address);
+  key('F6');
+  check('F6 shows the URL', a.screens.address?.value === shown() && !a.screens.address.hover, a.screens.address);
+  await until(() => uiJs(`!!document.getElementById('addr')`));
+  uiMouse(500);
+  await sleep(200);
+  check('a bar from F6 stays when the mouse moves', !!a.screens.address);
+  key('F6');
+  check('F6 again closes it', !a.screens.address);
+
   // ---- no address bar injection, odd addresses
   check('javascript: refused', a.actions.openUrl('javascript:alert(1)') === false);
   check('file: refused', a.actions.openUrl('file:///etc/passwd') === false);
