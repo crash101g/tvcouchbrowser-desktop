@@ -113,7 +113,8 @@ document.addEventListener('mousedown', (e) => {
 });
 
 function drawDialog(d, box) {
-  const b = el('div', 'box');
+  const b = el('div', d.at ? 'box popup' : 'box');
+  box.classList.toggle('popup', !!d.at);
   b.append(el('h2', '', d.title));
   if (d.qr) {
     const p = el('div', 'pair');
@@ -150,6 +151,16 @@ function drawDialog(d, box) {
     b.append(row);
   }
   box.append(b);
+  box.onmousedown = d.at ? (e) => { if (e.target === box) tv.back(); } : null;
+}
+
+/** Beside the click, but always on screen. It can only be measured once it is showing. */
+function placePopup() {
+  const b = document.querySelector('#dialog .box.popup');
+  if (!b || !state.dialog?.at) return;
+  const r = b.getBoundingClientRect();
+  b.style.left = `${Math.max(Math.min(state.dialog.at.x, innerWidth - r.width), 0)}px`;
+  b.style.top = `${Math.max(Math.min(state.dialog.at.y, innerHeight - r.height), 0)}px`;
 }
 
 const DRAW = { start: drawStart, menu: drawMenu, address: drawAddress, dialog: drawDialog };
@@ -179,6 +190,7 @@ tv.onRender((s) => {
     }
     box.hidden = !s[name];
   }
+  placePopup();
   restoreFocus();
 });
 

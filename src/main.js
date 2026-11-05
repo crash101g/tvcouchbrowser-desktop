@@ -132,6 +132,7 @@ function createView(t) {
   wc.setUserAgent(uaFor(t.url));
   wc.on('before-input-event', (e, input) => onInput(e, input));
   wc.on('before-mouse-event', (_e, event) => onMouse(event));
+  wc.on('context-menu', (_e, params) => pageMenu(t, params));
   wc.setWindowOpenHandler(({ url }) => {
     // Without a recent click these are pop-ups and pop-unders.
     if (Date.now() - t.lastGesture < GESTURE_MS) { t.lastGesture = 0; newWindow(t, url); } // one click, one window
@@ -354,6 +355,7 @@ function render() {
     menu: screens.menu && { items: screens.menu.map(({ label, symbol }) => ({ label, symbol })) },
     dialog: screens.dialog && {
       title: screens.dialog.title,
+      at: screens.dialog.at,
       message: screens.dialog.message,
       qr: screens.dialog.qr,
       prompt: screens.dialog.prompt,
@@ -369,11 +371,25 @@ function render() {
   screens.startFocus = null;
 }
 
-function showDialog(title, items) {
+function showDialog(title, items, at = null) {
   closeDialog();
-  screens.dialog = { title, items: items.map(([label, run]) => ({ label, run })) };
+  screens.dialog = { title, at, items: items.map(([label, run]) => ({ label, run })) };
   render();
   updateCursor();
+}
+
+/** A right click, or a long press from the phone. Pages with their own menu never get here. */
+function pageMenu(t, { x, y, linkURL, srcURL, mediaType, isEditable }) {
+  if (t !== tab() || fullscreen || overlayShown() || isEditable) return;
+  const url = [[linkURL, 'link'], [mediaType === 'none' ? '' : srcURL, mediaType], [t.url, 'this page']].find(([u]) => isHttp(u));
+  if (!url) return;
+  const [target, what] = url;
+  const label = what === 'this page' ? 'Open this page in a new tab' : `Open ${what} in a new tab`;
+  showDialog(hostOf(target), [[label, () => {
+    // openInNewTab would replace this page at the limit, which is not what was asked for here.
+    if (tabs.length >= MAX_TABS) toast(`${MAX_TABS} tabs is the limit`);
+    else openInNewTab(target);
+  }]], { x, y });
 }
 
 /** Closes the dialog; a page waiting on one gets the cancel answer. */

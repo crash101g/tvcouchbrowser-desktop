@@ -40,6 +40,8 @@ const web = http.createServer((req, res) => {
   res.setHeader('Content-Type', 'text/html');
   if (req.url.startsWith('/overlay')) return res.end('<!doctype html><title>O</title><body style="overflow:hidden;height:3000px"><div id=wall class="cookie-consent" style="position:fixed;inset:0;background:#000">wall</div>');
   if (req.url.startsWith('/noclick')) return res.end(`<!doctype html><title>N</title><script>window.popped=window.open('/two');window.alert('a');window.alert('b');window.alert('c');window.done=1;location.href='http://ads.test:${web.address().port}/x'</script>`);
+  if (req.url.startsWith('/pic')) { res.setHeader('Content-Type', 'image/svg+xml'); return res.end('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="red"/></svg>'); }
+  if (req.url.startsWith('/media')) return res.end('<!doctype html><title>M</title><a id=l href="/two" style="display:block;font-size:30px">go</a><img id=i src="/pic.svg" style="display:block"><p id=t style="font-size:30px">words</p><input id=f style="display:block"><p id=c style="position:fixed;right:0;bottom:0;margin:0">corner</p>');
   if (req.url.startsWith('/two')) return res.end('<!doctype html><title>Two</title><p>two');
   return res.end(PAGE.replaceAll('PORT', web.address().port));
 });
@@ -470,6 +472,76 @@ async function run(a) {
   check('one tab left: the strip goes', (await tabLabels()).length === 0);
   check('the page left is on screen and answers', (await pageJs('document.title')) === 'Renamed' && a.tab().view.getVisible());
   await closeBar();
+
+  // ---- right click: open in a new tab
+  a.load(`${base}/media`);
+  await until(async () => (await pageJs('document.title').catch(() => '')) === 'M');
+  const page = () => a.tab().view.webContents;
+  const rightClick = async (id) => {
+    const p = await rect(id);
+    const ev = { x: Math.round(p.x), y: Math.round(p.y), button: 'right', clickCount: 1 };
+    page().sendInputEvent({ type: 'mouseDown', ...ev }); page().sendInputEvent({ type: 'mouseUp', ...ev });
+  };
+  const labels = () => a.screens.dialog?.items?.map((i) => i.label);
+  const dismiss = async () => { key('Escape'); await until(() => !a.screens.dialog); };
+  await rightClick('l');
+  await until(() => a.screens.dialog);
+  check('right click on a link offers a new tab', JSON.stringify(labels()) === '["Open link in a new tab"]', labels());
+  check('it names where the link goes', a.screens.dialog.title === 'site.test', a.screens.dialog.title);
+  await until(() => uiJs(`!!document.querySelector('.box.popup')`));
+  const b1 = await uiJs(`(()=>{const r=document.querySelector('.box.popup').getBoundingClientRect();return{x:r.x,y:r.y}})()`);
+  const l1 = await rect('l');
+  check('the menu opens at the click', Math.abs(b1.x - l1.x) < 3 && Math.abs(b1.y - l1.y) < 3, [b1, l1]);
+  await uiJs(`document.querySelector('[data-key=i0]').click(); 0`);
+  await until(() => a.tabs.length === 2);
+  await until(async () => (await pageJs('document.title').catch(() => '')) === 'Two');
+  check('the link opens in a new tab', a.tabs.length === 2 && a.tab().url.endsWith('/two'), a.tab().url);
+  a.closeTab(1);
+  await until(async () => (await pageJs('document.title').catch(() => '')) === 'M');
+  await rightClick('i');
+  await until(() => a.screens.dialog);
+  check('right click on an image offers it', JSON.stringify(labels()) === '["Open image in a new tab"]', labels());
+  await uiJs(`document.querySelector('[data-key=i0]').click(); 0`);
+  await until(() => a.tabs.length === 2 && a.tab().url?.endsWith('/pic.svg'));
+  check('the image opens in a new tab', a.tab().url?.endsWith('/pic.svg'), a.tab().url);
+  a.closeTab(1);
+  await until(async () => (await pageJs('document.title').catch(() => '')) === 'M');
+  await rightClick('t');
+  await until(() => a.screens.dialog);
+  check('right click on other content offers the page', JSON.stringify(labels()) === '["Open this page in a new tab"]', labels());
+  await dismiss();
+  check('Esc closes it without opening anything', a.tabs.length === 1);
+  await rightClick('t');
+  await until(() => uiJs(`!!document.querySelector('.box.popup')`));
+  uiMouse(600, 'mouseDown', 900); uiMouse(600, 'mouseUp', 900);
+  await until(() => !a.screens.dialog);
+  check('a click outside closes it', !a.screens.dialog && a.tabs.length === 1);
+  await rightClick('c');
+  await until(() => uiJs(`!!document.querySelector('.box.popup')`));
+  const b2 = await uiJs(`(()=>{const r=document.querySelector('.box.popup').getBoundingClientRect();return{right:r.right,bottom:r.bottom,w:innerWidth,h:innerHeight}})()`);
+  check('in a corner the menu stays on screen', b2.right <= b2.w && b2.bottom <= b2.h, b2);
+  await dismiss();
+  await rightClick('f');
+  await sleep(200);
+  check('right click in a text field shows nothing', !a.screens.dialog);
+  await pageJs(`document.addEventListener('contextmenu',(e)=>e.preventDefault(),{once:true}); 0`);
+  await rightClick('t');
+  await sleep(200);
+  check('a page with its own right click keeps it', !a.screens.dialog);
+  a.actions.pointer({ op: 'l' });
+  await until(() => a.screens.dialog);
+  check('a long press on the phone opens it too', !!labels()?.[0]?.startsWith('Open'), labels());
+  await dismiss();
+  while (a.tabs.length < 6) a.openInNewTab(`${base}/media`);
+  await until(async () => (await pageJs('document.title').catch(() => '')) === 'M');
+  await rightClick('l');
+  await until(() => a.screens.dialog);
+  await uiJs(`document.querySelector('[data-key=i0]').click(); 0`);
+  await until(() => !a.screens.dialog);
+  await sleep(150);
+  check('at six tabs it says so and keeps the page', a.tabs.length === 6 && a.tab().url.endsWith('/media'), a.tab().url);
+  while (a.tabs.length > 1) a.closeTab(a.tabs.length - 1);
+  await until(() => !a.screens.dialog);
 
   // ---- new tabs: Ctrl+T and the + button
   const tabsBefore = a.tabs.length;
