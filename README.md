@@ -1,5 +1,7 @@
 # TVCouchBrowser for Linux and macOS
 
+![TVCouchBrowser: a browser for your TV, with a phone as the remote](docs/images/hero.jpg)
+
 A couch browser for Pop!_OS, Ubuntu and macOS, for a computer connected to a TV. It blocks ads, works with a
 remote or keyboard, and lets you type from your phone. It is a port of
 [TVCouchBrowser for Android TV](https://github.com/crash101g/tvcouchbrowser) by crash101g.
@@ -13,6 +15,26 @@ remote or keyboard, and lets you type from your phone. It is a port of
 - **Send to TV** from the iPhone share sheet: see [docs/send-to-tv-shortcut.md](docs/send-to-tv-shortcut.md).
 - **Widevine**, so streaming sites can play protected video. Services that require more than software
   Widevine (L3) may refuse or limit quality; upstream has the same limit.
+
+## Screenshots
+
+Move the mouse to the top of the screen or press F6 for the address, your tabs and the menu:
+
+![The top bar, with three tabs, the address, a menu button and a new tab button](docs/images/top-bar.jpg)
+
+Everything else is in a menu made for a remote:
+
+![The menu, with large tiles for navigation, zoom, ad blocking and settings](docs/images/menu.jpg)
+
+The ad blocker on and off, on the same page:
+
+![The same news page with three ads, and with the ad blocker removing all three](docs/images/ad-blocking.jpg)
+
+Your phone becomes a trackpad, keyboard and remote:
+
+![The phone page next to a TV](docs/images/phone-remote.jpg)
+
+These are from the real app. The sites in them are made up for the pictures, and the ads are samples.
 
 ## Install on Linux
 
