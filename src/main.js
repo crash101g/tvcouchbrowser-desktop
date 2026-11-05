@@ -260,7 +260,13 @@ function closeTab(index) {
     t.view = null;
   }
   if (!tabs.length) { tabs.push(newTab(null)); current = 0; showStart(); return; }
+  if (index !== current) { // what is on screen stays; only its place in the list may move
+    if (index < current) current--;
+    render();
+    return;
+  }
   current = Math.min(current, tabs.length - 1);
+  if (screens.address) screens.address.value = tab().url || '';
   if (tab().url) showTab(current); else showStart();
   updateKeepAwake();
 }
@@ -386,6 +392,8 @@ ipcMain.on('ui:act', (e, layer, index, extra) => {
     screens.menu?.[index]?.run();
   } else if (layer === 'address-tab') {
     selectTab(index);
+  } else if (layer === 'address-close-tab') {
+    if (tabs[index]) closeTab(index);
   } else if (layer === 'address-menu') {
     if (!fullscreen) { screens.address = null; openMenu(); }
   } else if (layer === 'address') {
@@ -451,6 +459,7 @@ function openMenu() {
     item('Add bookmark', '＋', () => { closeMenu(); addBookmark(); }),
     item('Zoom out', '－', () => zoomBy(0.8)),
     item('Zoom in', '＋', () => zoomBy(1.25)),
+    item('Zoom 100%', '🔍', () => setZoom(1)),
     item(`Mobile site: ${isMobile(t.url) ? 'on' : 'off'}`, '📱', () => { closeMenu(); toggleMobile(); }),
     item('Ad blocking', '⛔', () => { closeMenu(); adBlockDialog(); }),
     item('Clean up page', '🧹', () => { closeMenu(); cleanUpPage(); }),
@@ -617,11 +626,17 @@ async function zap() {
   else toast('Removed (this page only)');
 }
 
+function setZoom(zoom) {
+  const t = tab();
+  if (!t.view) return;
+  t.zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom));
+  t.view.webContents.setZoomFactor(t.zoom);
+}
+
 function zoomBy(factor) {
   const t = tab();
   if (!t.view) return;
-  t.zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, t.zoom * factor));
-  t.view.webContents.setZoomFactor(t.zoom);
+  setZoom(t.zoom * factor);
 }
 
 // ---- keys ---------------------------------------------------------------------------------------

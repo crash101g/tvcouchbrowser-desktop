@@ -73,7 +73,13 @@ function drawTabs(tabs, box) {
   box.querySelector('.tabs')?.remove();
   if (!tabs) return;
   const strip = el('div', 'tabs');
-  tabs.forEach((t, i) => strip.append(focusable('button', t.current ? 'tab current' : 'tab', `tab${i}`, () => tv.act('address-tab', i), t.name)));
+  tabs.forEach((t, i) => {
+    const item = el('div', t.current ? 'tab-item current' : 'tab-item');
+    const close = focusable('button', 'tab-close', `close${i}`, () => { lastFocus.address = 'addr'; tv.act('address-close-tab', i); }, '×');
+    close.setAttribute('aria-label', `Close ${t.name}`);
+    item.append(focusable('button', t.current ? 'tab current' : 'tab', `tab${i}`, () => tv.act('address-tab', i), t.name), close);
+    strip.append(item);
+  });
   box.prepend(strip);
 }
 
@@ -189,6 +195,8 @@ function move(dir) {
   let best = null, bestScore = Infinity;
   for (const e of list) {
     if (e === cur) continue;
+    // Only Right from its tab reaches a close button, so moving between rows can't land on one and close a tab.
+    if (e.classList.contains('tab-close') && (dir === 'up' || dir === 'down')) continue;
     const r = e.getBoundingClientRect();
     const x = r.left + r.width / 2, y = r.top + r.height / 2;
     let along, side;

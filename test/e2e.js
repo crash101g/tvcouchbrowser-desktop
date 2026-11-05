@@ -211,7 +211,7 @@ async function run(a) {
   // ---- menu, tabs, back through the remote keys
   key('F1');
   await until(() => uiJs(`document.querySelectorAll('#menu .tile').length`));
-  check('menu opens', (await uiJs(`document.querySelectorAll('#menu .tile').length`)) === 16);
+  check('menu opens', (await uiJs(`document.querySelectorAll('#menu .tile').length`)) === 17);
   check('the phone pointer stays up over the menu', a.cursorView.getVisible());
   await uiJs(`document.querySelector('[data-key=m4]').click()`); // Tabs
   await until(() => a.screens.dialog);
@@ -303,7 +303,7 @@ async function run(a) {
   a.onInput({ preventDefault() {} }, { type: 'keyUp', key: 'Escape' });
   check('hold Back opens the menu', !!a.screens.menu);
   await until(() => uiJs(`document.querySelectorAll('#menu .tile').length`));
-  await uiJs(`document.querySelector('[data-key=m13]').click()`); // Pair phone
+  await uiJs(`document.querySelector('[data-key=m14]').click()`); // Pair phone
   await until(() => a.screens.dialog);
   await until(() => uiJs(`document.querySelector('.pair img')?.complete && document.querySelector('.pair img').naturalWidth > 0`));
   check('Pair phone shows a QR image', await uiJs(`document.querySelector('.pair img').naturalWidth > 0`));
@@ -421,8 +421,55 @@ async function run(a) {
   uiMouse(500);
   await until(() => !a.screens.address);
   check('clicking a tab does not stop the bar hiding', !a.screens.address);
-  a.closeTab(1);
+
+  // ---- Zoom 100% in the menu
+  const menuItem = (label) => uiJs(`[...document.querySelectorAll('#menu .tile')].find((b) => b.textContent.endsWith(${JSON.stringify(label)})).click(); 0`);
+  key('F1');
+  await until(() => a.screens.menu);
+  await until(() => uiJs(`document.querySelectorAll('#menu .tile').length > 0`));
+  await menuItem('Zoom in');
+  await until(() => a.tab().view.webContents.getZoomFactor() > 1.2);
+  check('Zoom in still works', a.tab().view.webContents.getZoomFactor() > 1.2, a.tab().view.webContents.getZoomFactor());
+  await menuItem('Zoom 100%');
+  await until(() => a.tab().view.webContents.getZoomFactor() === 1);
+  check('Zoom 100% resets the page', a.tab().view.webContents.getZoomFactor() === 1 && a.tab().zoom === 1, a.tab().zoom);
+  check('and leaves the menu open', !!a.screens.menu);
+  const grid = await uiJs(`(()=>{const g=document.querySelector('#menu .grid').getBoundingClientRect();return{top:g.top,bottom:g.bottom,height:innerHeight}})()`);
+  check('the menu still fits on screen', grid.top >= 0 && grid.bottom <= grid.height, grid);
+  key('F1');
+  await until(() => !a.screens.menu);
+
+  // ---- closing tabs from the bar
+  a.openInNewTab(`${base}/overlay`);
+  await until(async () => (await pageJs('document.title').catch(() => '')) === 'O');
+  await sleep(150);
+  if (!a.screens.address) key('F6');
+  await until(async () => (await tabLabels()).length === 3);
+  check('each tab has a close button', await uiJs(`document.querySelectorAll('.tab-close').length`) === 3);
+  await uiJs(`document.getElementById('addr').focus(); 0`);
+  uiKey('Up');
+  await until(async () => (await focused()) !== '' && !(await uiJs(`document.activeElement.id`)));
+  check('Up never lands on a close button', /^tab/.test(await focused()) && !(await focused()).includes('tab-close'), await focused());
+  await uiJs(`document.querySelector('.tab').focus(); 0`);
+  uiKey('Right');
+  await until(async () => (await focused()).includes('tab-close'));
+  check('Right from a tab reaches its close button', await uiJs(`document.activeElement === document.querySelector('.tab-close')`));
+  await uiJs(`document.getElementById('addr').value = 'typed'; 0`);
+  await uiJs(`document.querySelectorAll('.tab-close')[0].click(); 0`);
+  await until(async () => (await tabLabels()).length === 2);
+  check('closing a tab to the left keeps the current page', a.tab().title === 'O' && a.tabs.length === 2 && await uiJs(`document.querySelector('.tab.current').textContent`) === 'O', a.tab().title);
+  check('closing another tab leaves what was typed alone', await uiJs(`document.getElementById('addr').value`) === 'typed');
+  const x = await uiJs(`(()=>{const r=document.querySelectorAll('.tab-close')[1].getBoundingClientRect();return{x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)}})()`);
+  uiMouse(x.y, 'mouseMove', x.x);
+  await sleep(50);
+  uiMouse(x.y, 'mouseDown', x.x); uiMouse(x.y, 'mouseUp', x.x);
   await until(() => a.tabs.length === 1);
+  check('a real click on × closes the current tab', a.tabs.length === 1 && a.tab().title === 'Renamed', a.tab().title);
+  await until(() => uiJs(`document.getElementById('addr').value`).then((v) => v.endsWith('/overlay')));
+  check('the bar moves to the tab that is left', a.screens.address?.value.endsWith('/overlay'), a.screens.address);
+  check('one tab left: the strip goes', (await tabLabels()).length === 0);
+  check('the page left is on screen and answers', (await pageJs('document.title')) === 'Renamed' && a.tab().view.getVisible());
+  await closeBar();
 
   // ---- no address bar injection, odd addresses
   check('javascript: refused', a.actions.openUrl('javascript:alert(1)') === false);
