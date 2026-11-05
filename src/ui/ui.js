@@ -69,9 +69,24 @@ function textField(id, value, onSubmit) {
   return input;
 }
 
+function drawTabs(tabs, box) {
+  box.querySelector('.tabs')?.remove();
+  if (!tabs) return;
+  const strip = el('div', 'tabs');
+  tabs.forEach((t, i) => strip.append(focusable('button', t.current ? 'tab current' : 'tab', `tab${i}`, () => tv.act('address-tab', i), t.name)));
+  box.prepend(strip);
+}
+
 function drawAddress(s, box) {
-  box.append(textField('addr', s.value, (v) => tv.act('address', 0, v)));
+  const row = el('div', 'row');
+  const field = textField('addr', s.value, (v) => tv.act('address', 0, v));
+  field.setSelectionRange(field.value.length, field.value.length); // Right from here reaches the menu button
+  const menu = focusable('button', 'menu-button', 'menu', () => tv.act('address-menu'), '☰');
+  menu.setAttribute('aria-label', 'Menu');
+  row.append(field, menu);
+  box.append(row);
   box.append(el('div', 'hint', 'Type here, or use "Open on TV" on your phone. Enter to go, Esc to cancel.'));
+  drawTabs(s.tabs, box);
   lastFocus.address = 'addr';
   barClicked = false;
 }
@@ -85,8 +100,8 @@ document.addEventListener('mousemove', (e) => {
 // Clicking outside closes any bar.
 document.addEventListener('mousedown', (e) => {
   if (topLayer() !== 'address') return;
-  if ($('address').contains(e.target)) barClicked = true;
-  else tv.act('address');
+  if (e.target.id === 'addr') barClicked = true;
+  else if (!$('address').contains(e.target)) tv.act('address');
 });
 
 function drawDialog(d, box) {
@@ -148,7 +163,9 @@ tv.onRender((s) => {
   for (const name of LAYERS) {
     const box = $(name);
     const same = JSON.stringify(before[name]) === JSON.stringify(s[name]);
-    if (!same) {
+    if (name === 'address' && !same && s.address && before.address?.value === s.address.value) {
+      drawTabs(s.address.tabs, box); // a title or tab changed: anything typed in the field stays
+    } else if (!same) {
       box.replaceChildren();
       if (s[name]) DRAW[name](s[name], box);
     }
@@ -197,10 +214,11 @@ let holdTimer = 0, held = false;
 window.addEventListener('keydown', (e) => {
   if (!topLayer()) return;
   const dir = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' }[e.key];
-  const inField = document.activeElement && document.activeElement.tagName === 'INPUT';
-  if (dir && !(inField && (dir === 'left' || dir === 'right'))) { e.preventDefault(); move(dir); return; }
+  const cur = document.activeElement;
+  const inField = cur && cur.tagName === 'INPUT';
+  const leavesBar = cur && cur.id === 'addr' && dir === 'right' && cur.selectionStart === cur.value.length && cur.selectionEnd === cur.value.length;
+  if (dir && (leavesBar || !(inField && (dir === 'left' || dir === 'right')))) { e.preventDefault(); move(dir); return; }
   if (e.key === 'Enter') {
-    const cur = document.activeElement;
     e.preventDefault();
     if (e.repeat) return;
     if (cur && cur.dataset.hold) {

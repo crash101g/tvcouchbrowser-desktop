@@ -317,7 +317,7 @@ async function run(a) {
   await until(async () => (await pageJs('document.title').catch(() => '')) === 'Two');
   const wc = a.tab().view.webContents;
   const realMouse = (y, type = 'mouseMove') => wc.sendInputEvent({ type, x: 600, y, ...(type === 'mouseMove' ? {} : { button: 'left', clickCount: 1 }) });
-  const uiMouse = (y, type = 'mouseMove') => a.uiView.webContents.sendInputEvent({ type, x: 600, y, ...(type === 'mouseMove' ? {} : { button: 'left', clickCount: 1 }) });
+  const uiMouse = (y, type = 'mouseMove', x = 600) => a.uiView.webContents.sendInputEvent({ type, x, y, ...(type === 'mouseMove' ? {} : { button: 'left', clickCount: 1 }) });
   const closeBar = async () => { key('Escape'); await until(() => !a.screens.address); };
   realMouse(0);
   check('a mouse already at the top when the page appears does nothing', !a.screens.address);
@@ -370,6 +370,59 @@ async function run(a) {
   check('a bar from F6 stays when the mouse moves', !!a.screens.address);
   key('F6');
   check('F6 again closes it', !a.screens.address);
+
+  // ---- tabs and the menu button in the address bar
+  const uiKey = (keyCode) => a.uiView.webContents.sendInputEvent({ type: 'keyDown', keyCode });
+  const focused = () => uiJs('document.activeElement.className');
+  const tabLabels = () => uiJs(`[...document.querySelectorAll('.tab')].map((b) => b.textContent)`);
+  const barDrawn = () => until(() => uiJs(`!!document.getElementById('addr')`));
+  key('F6');
+  await barDrawn();
+  check('one tab: no tab strip', (await tabLabels()).length === 0);
+  await uiJs(`document.querySelector('.menu-button').click(); 0`);
+  await until(() => a.screens.menu);
+  check('the menu button opens the menu', !!a.screens.menu && !a.screens.address);
+  key('Escape');
+  await until(() => !a.screens.menu);
+  a.openInNewTab(`${base}/overlay`);
+  await until(async () => (await pageJs('document.title').catch(() => '')) === 'O');
+  // A new view makes Chromium re-report the hardware cursor, 0,0 on the hidden display, which may open the bar.
+  await sleep(150);
+  if (!a.screens.address) key('F6');
+  await until(async () => (await tabLabels()).length === 2);
+  check('two tabs appear in the bar', JSON.stringify(await tabLabels()) === '["Two","O"]', await tabLabels());
+  check('the current tab is marked', await uiJs(`document.querySelector('.tab.current').textContent`) === 'O');
+  await uiJs(`document.getElementById('addr').value = 'typed'; 0`);
+  await pageJs(`document.title = 'Renamed'; 0`);
+  await until(async () => (await tabLabels())[1] === 'Renamed');
+  check('a new page title reaches the tab', (await tabLabels())[1] === 'Renamed', await tabLabels());
+  check('and leaves what was typed alone', await uiJs(`document.getElementById('addr').value`) === 'typed');
+  await uiJs(`document.getElementById('addr').value = ${JSON.stringify(a.screens.address.value)}; 0`);
+  uiKey('Right');
+  await until(async () => (await focused()).includes('menu-button'));
+  check('Right at the end of the URL reaches the menu button', (await focused()).includes('menu-button'), await focused());
+  uiKey('Left');
+  await until(async () => (await uiJs('document.activeElement.id')) === 'addr');
+  uiKey('Up');
+  await until(async () => (await focused()).includes('tab'));
+  check('Up reaches the tabs', (await focused()).includes('tab'), await focused());
+  await uiJs(`document.querySelector('.tab').click(); 0`);
+  await until(() => a.tab().title === 'Two');
+  await until(() => uiJs(`document.getElementById('addr').value`).then((v) => v.endsWith('/two')));
+  check('clicking a tab switches to it and shows its URL', a.tab().title === 'Two' && a.screens.address?.value.endsWith('/two'), a.screens.address);
+  await closeBar();
+  realMouse(300); realMouse(0);
+  await barDrawn();
+  const r = await uiJs(`(()=>{const r=document.querySelectorAll('.tab')[1].getBoundingClientRect();return{x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)}})()`);
+  uiMouse(r.y, 'mouseDown', r.x); uiMouse(r.y, 'mouseUp', r.x);
+  await until(() => a.tab().title === 'Renamed');
+  check('a real click on a tab switches to it', a.tab().title === 'Renamed', a.tab().title);
+  await sleep(150);
+  uiMouse(500);
+  await until(() => !a.screens.address);
+  check('clicking a tab does not stop the bar hiding', !a.screens.address);
+  a.closeTab(1);
+  await until(() => a.tabs.length === 1);
 
   // ---- no address bar injection, odd addresses
   check('javascript: refused', a.actions.openUrl('javascript:alert(1)') === false);

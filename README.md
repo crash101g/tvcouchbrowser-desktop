@@ -86,12 +86,13 @@ USB and Bluetooth "air" remotes act as keyboards, so any of them should work.
 | Next, Previous | Jump 60 s forward or back |
 | Channel up/down | Page up/down |
 | F11 | Full screen or window |
-| F6 | Shows or hides the address bar with the page's URL |
+| F6 | Shows or hides the top bar: the page's URL, a ☰ menu button and, with two or more tabs, the tabs |
 | Ctrl+L, Ctrl+R or F5, Ctrl+Q | Address, reload, quit |
 
 While a text field has focus, keys go to the field; press Esc to get the remote back. A real mouse works
-as usual. Move it to the very top of the window to show the address bar; it hides again when you move away,
-unless you clicked or typed in it. On the start screen, hold Enter (or right-click) a bookmark tile to move or
+as usual. Move it to the very top of the window to show the top bar; it hides again when you move away, unless
+you clicked or typed in the address. With a remote in the bar, Up reaches the tabs and Right at the end of the
+address reaches ☰. On the start screen, hold Enter (or right-click) a bookmark tile to move or
 remove it.
 
 Unlike Android TV, this has no on-screen keyboard, so to type with only a remote, use your phone.

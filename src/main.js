@@ -160,7 +160,7 @@ function createView(t) {
     t.url = url;
   });
   wc.on('did-navigate-in-page', (_e, url, isMainFrame) => { if (isMainFrame) t.url = url; });
-  wc.on('page-title-updated', (_e, title) => { t.title = title; });
+  wc.on('page-title-updated', (_e, title) => { t.title = title; if (screens.address) render(); });
   wc.on('did-finish-load', () => {
     t.url = wc.getURL() || t.url;
     saveTabs();
@@ -326,7 +326,10 @@ function render() {
       hint: 'Menu key, F1 or hold Back (Esc): browser menu  ·  Hold OK on a tile: move or remove',
       focus: screens.startFocus,
     } : null,
-    address: screens.address,
+    address: screens.address && {
+      ...screens.address,
+      tabs: tabs.length > 1 ? tabs.map((t, i) => ({ name: tabName(t), current: i === current })) : null,
+    },
     menu: screens.menu && { items: screens.menu.map(({ label, symbol }) => ({ label, symbol })) },
     dialog: screens.dialog && {
       title: screens.dialog.title,
@@ -381,6 +384,10 @@ ipcMain.on('ui:act', (e, layer, index, extra) => {
     bookmarkOptions(index);
   } else if (layer === 'menu') {
     screens.menu?.[index]?.run();
+  } else if (layer === 'address-tab') {
+    selectTab(index);
+  } else if (layer === 'address-menu') {
+    if (!fullscreen) { screens.address = null; openMenu(); }
   } else if (layer === 'address') {
     closeAddress();
     if (typeof extra === 'string' && extra.trim()) load(extra);
@@ -486,13 +493,18 @@ function toggleAddress() {
   else if (!screens.dialog && !fullscreen) openAddress();
 }
 
+const tabName = (t) => t.title || hostOf(t.url) || 'Start screen';
+
+function selectTab(index) {
+  const t = tabs[index];
+  if (!t) return;
+  if (screens.address) screens.address.value = t.url || '';
+  showTab(index);
+  if (!t.url) showStart();
+}
+
 function tabsDialog() {
-  const items = tabs.map((t, i) => {
-    const name = t.title || hostOf(t.url) || 'Start screen';
-    return [(i === current ? '▶ ' : '    ') + name, () => {
-      if (t.url) showTab(i); else { showTab(i); showStart(); }
-    }];
-  });
+  const items = tabs.map((t, i) => [(i === current ? '▶ ' : '    ') + tabName(t), () => selectTab(i)]);
   if (tabs.length < MAX_TABS) items.push(['New tab', () => { tabs.push(newTab(null)); showTab(tabs.length - 1); showStart(); }]);
   items.push(['Close this tab', () => closeTab(current)]);
   showDialog(`Tabs (up to ${MAX_TABS})`, items);
@@ -1084,7 +1096,7 @@ async function start() {
   if (url) load(url);
   else if (tab().url) showTab(current);
   else showStart();
-  test.ready?.({ actions, tabs, screens, server, blocker, tokens, bookmarks, uiView, cursorView, toastView, tab, load, onInput, get pointer() { return pointer; }, get cursorMode() { return cursorMode; }, get fullscreen() { return fullscreen; } });
+  test.ready?.({ actions, tabs, screens, server, blocker, tokens, bookmarks, uiView, cursorView, toastView, tab, load, onInput, openInNewTab, closeTab, get pointer() { return pointer; }, get cursorMode() { return cursorMode; }, get fullscreen() { return fullscreen; } });
 }
 
 app.setName('tvcouchbrowser');
