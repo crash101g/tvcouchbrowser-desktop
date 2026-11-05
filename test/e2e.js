@@ -471,6 +471,33 @@ async function run(a) {
   check('the page left is on screen and answers', (await pageJs('document.title')) === 'Renamed' && a.tab().view.getVisible());
   await closeBar();
 
+  // ---- new tabs: Ctrl+T and the + button
+  const tabsBefore = a.tabs.length;
+  key('t', { control: true });
+  await until(() => a.tabs.length === tabsBefore + 1 && a.screens.address);
+  check('Ctrl+T opens a blank tab, ready to type', a.tabs.length === tabsBefore + 1 && a.screens.start && a.screens.address?.value === '' && !a.tab().url, a.screens.address);
+  await until(() => uiJs(`document.activeElement.id === 'addr' && document.getElementById('addr').value === ''`));
+  check('the new tab is listed and the field has focus', (await tabLabels()).at(-1) === 'Start screen', await tabLabels());
+  await closeBar();
+  check('Esc leaves the start screen of the new tab', a.screens.start && a.tabs.length === tabsBefore + 1);
+  key('F6');
+  await barDrawn();
+  await uiJs(`document.querySelector('.new-tab').click(); 0`);
+  await until(() => a.tabs.length === tabsBefore + 2);
+  check('the + button opens a tab, even from the bar', a.tabs.length === tabsBefore + 2 && a.screens.start && a.screens.address?.value === '', a.tabs.length);
+  await barDrawn();
+  while (a.tabs.length < 6) { key('t', { control: true }); await sleep(30); }
+  key('t', { control: true });
+  await sleep(100);
+  check('six tabs is the limit', a.tabs.length === 6, a.tabs.length);
+  while (a.tabs.length > 1) a.closeTab(a.tabs.length - 1);
+  await until(() => !a.screens.start);
+  await closeBar();
+  key('F6');
+  await barDrawn();
+  check('one tab: the + button is in the bar', await uiJs(`!!document.querySelector('.new-tab')`) && (await tabLabels()).length === 0);
+  await closeBar();
+
   // ---- no address bar injection, odd addresses
   check('javascript: refused', a.actions.openUrl('javascript:alert(1)') === false);
   check('file: refused', a.actions.openUrl('file:///etc/passwd') === false);

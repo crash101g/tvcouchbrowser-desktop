@@ -64,7 +64,7 @@ What is different on a Mac:
 
 - macOS asks to allow **incoming connections** and **Local Network** access: allow both, or the phone can't
   connect. It may ask for **Keychain** access too, and again after each rebuild, because the signature is ad hoc.
-- Use **Cmd** for Cmd+L, Cmd+R and Cmd+Q; Ctrl still works, for a remote's keyboard. On an Apple keyboard, F6
+- Use **Cmd** for Cmd+L, Cmd+T, Cmd+R and Cmd+Q; Ctrl still works, for a remote's keyboard. On an Apple keyboard, F6
   may need Fn. In full screen, the macOS menu bar slides down along with the address bar.
 - F11 and F1 are taken by macOS or the brightness key. Use **Ctrl+Cmd+F** for full screen, and **hold Esc** (or
   Fn+F1) for the menu. Mac keyboards have no Menu key.
@@ -86,13 +86,13 @@ USB and Bluetooth "air" remotes act as keyboards, so any of them should work.
 | Next, Previous | Jump 60 s forward or back |
 | Channel up/down | Page up/down |
 | F11 | Full screen or window |
-| F6 | Shows or hides the top bar: the page's URL, a ☰ menu button and, with two or more tabs, the tabs, each with a × to close it |
-| Ctrl+L, Ctrl+R or F5, Ctrl+Q | Address, reload, quit |
+| F6 | Shows or hides the top bar: the page's URL, a ☰ menu button and, with two or more tabs, the tabs, each with a × to close it, and a ＋ for a new tab |
+| Ctrl+L, Ctrl+T, Ctrl+R or F5, Ctrl+Q | Address, new tab, reload, quit |
 
 While a text field has focus, keys go to the field; press Esc to get the remote back. A real mouse works
 as usual. Move it to the very top of the window to show the top bar; it hides again when you move away, unless
 you clicked or typed in the address. With a remote in the bar, Up reaches the tabs, Right from a tab reaches its ×,
-and Right at the end of the address reaches ☰. On the start screen, hold Enter (or right-click) a bookmark tile to move or
+and Right at the end of the address reaches ☰, then ＋. On the start screen, hold Enter (or right-click) a bookmark tile to move or
 remove it.
 
 Unlike Android TV, this has no on-screen keyboard, so to type with only a remote, use your phone.

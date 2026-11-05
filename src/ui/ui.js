@@ -89,7 +89,9 @@ function drawAddress(s, box) {
   field.setSelectionRange(field.value.length, field.value.length); // Right from here reaches the menu button
   const menu = focusable('button', 'menu-button', 'menu', () => tv.act('address-menu'), '☰');
   menu.setAttribute('aria-label', 'Menu');
-  row.append(field, menu);
+  const plus = focusable('button', 'new-tab', 'new', () => tv.act('address-new-tab'), '＋');
+  plus.setAttribute('aria-label', 'New tab');
+  row.append(field, menu, plus);
   box.append(row);
   box.append(el('div', 'hint', 'Type here, or use "Open on TV" on your phone. Enter to go, Esc to cancel.'));
   drawTabs(s.tabs, box);

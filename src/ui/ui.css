@@ -30,7 +30,7 @@ input[type=text] { width: 100%; font: inherit; font-size: 1.4rem; color: #fff; b
 #address .row { display: flex; gap: .75rem; }
 #address .row input { flex: 1; min-width: 0; }
 #address .row input:focus { transform: none; } /* it fills the row, so growing would cover the menu button */
-#address .menu-button { flex: none; width: 4rem; border-radius: .75rem; background: var(--tile); font-size: 1.6rem; }
+#address .menu-button, #address .new-tab { flex: none; width: 4rem; border-radius: .75rem; background: var(--tile); font-size: 1.6rem; }
 #address .hint { margin-top: .6rem; color: var(--dimmer); font-size: .9rem; }
 
 #menu { position: fixed; inset: 0; background: #000000dd; display: flex; align-items: center; justify-content: center; }

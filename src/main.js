@@ -252,6 +252,21 @@ function newWindow(from, url) {
   ]);
 }
 
+function addBlankTab() {
+  tabs.push(newTab(null));
+  showTab(tabs.length - 1);
+  showStart();
+}
+
+/** Ctrl+T or the + button: a new tab, ready to type into. */
+function newTabInBar() {
+  if (screens.dialog || fullscreen) return;
+  if (tabs.length >= MAX_TABS) { toast(`${MAX_TABS} tabs is the limit`); return; }
+  screens.address = null;
+  addBlankTab();
+  openAddress();
+}
+
 function closeTab(index) {
   const [t] = tabs.splice(index, 1);
   if (t.view) {
@@ -392,6 +407,8 @@ ipcMain.on('ui:act', (e, layer, index, extra) => {
     screens.menu?.[index]?.run();
   } else if (layer === 'address-tab') {
     selectTab(index);
+  } else if (layer === 'address-new-tab') {
+    newTabInBar();
   } else if (layer === 'address-close-tab') {
     if (tabs[index]) closeTab(index);
   } else if (layer === 'address-menu') {
@@ -514,7 +531,7 @@ function selectTab(index) {
 
 function tabsDialog() {
   const items = tabs.map((t, i) => [(i === current ? '▶ ' : '    ') + tabName(t), () => selectTab(i)]);
-  if (tabs.length < MAX_TABS) items.push(['New tab', () => { tabs.push(newTab(null)); showTab(tabs.length - 1); showStart(); }]);
+  if (tabs.length < MAX_TABS) items.push(['New tab', addBlankTab]);
   items.push(['Close this tab', () => closeTab(current)]);
   showDialog(`Tabs (up to ${MAX_TABS})`, items);
 }
@@ -657,6 +674,7 @@ function onInput(e, input) {
   const command = commandHeld(input);
   if (down && command && (key === 'q' || key === 'Q')) { e.preventDefault(); app.quit(); return; }
   if (down && command && (key === 'l' || key === 'L')) { e.preventDefault(); openAddress(); return; }
+  if (down && command && !input.isAutoRepeat && (key === 't' || key === 'T')) { e.preventDefault(); newTabInBar(); return; }
   if (key === 'F6') { e.preventDefault(); if (down && !input.isAutoRepeat) toggleAddress(); return; }
   if (down && (key === 'F5' || (command && (key === 'r' || key === 'R')))) { e.preventDefault(); t.view?.webContents.reload(); return; }
   if (input.control || input.alt || input.meta) return;
