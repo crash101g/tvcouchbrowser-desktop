@@ -41,7 +41,7 @@ These are from the real app. The sites in them are made up for the pictures, and
 Build and install a package (no root needed to build):
 
     tools/build-deb.sh
-    sudo apt install ./dist/tvcouchbrowser_0.4.0_amd64.deb
+    sudo apt install ./dist/tvcouchbrowser_0.4.1_amd64.deb
 
 It then appears in the app launcher as **TVCouchBrowser**, or run `tvcouchbrowser`. To remove it:
 `sudo apt remove tvcouchbrowser`.
@@ -68,7 +68,7 @@ Build it on the Mac (Terminal, in this folder). Streaming sites need the app sig
     pip3 install --user castlabs-evs
     python3 -m castlabs_evs.account signup    # once
     tools/build-macos.sh
-    ditto -x -k dist/TVCouchBrowser-0.4.0-macos-arm64.zip /Applications
+    ditto -x -k dist/TVCouchBrowser-0.4.1-macos-arm64.zip /Applications
 
 Pass `--no-evs` to `tools/build-macos.sh` to skip EVS: everything works except protected video. So does
 `./run.sh`, which needs no build, and has the same limit: without EVS signing, streaming services refuse the
