@@ -14,6 +14,7 @@ const { app } = require('electron');
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tvcb-e2e-'));
 app.setPath('userData', dir);
+app.setVersion(require('../package.json').version); // started from this file, Electron never reads package.json
 const sleep = (ms) => new Promise((r) => { setTimeout(r, ms); });
 const results = [];
 const hits = [];
@@ -214,6 +215,7 @@ async function run(a) {
   key('F1');
   await until(() => uiJs(`document.querySelectorAll('#menu .tile').length`));
   check('menu opens', (await uiJs(`document.querySelectorAll('#menu .tile').length`)) === 17);
+  check('the menu shows the version', (await uiJs(`document.querySelector('#menu .version').textContent`)) === `TVCouchBrowser ${require('../package.json').version}`);
   check('the phone pointer stays up over the menu', a.cursorView.getVisible());
   await uiJs(`document.querySelector('[data-key=m4]').click()`); // Tabs
   await until(() => a.screens.dialog);

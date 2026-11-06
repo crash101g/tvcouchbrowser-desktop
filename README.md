@@ -103,7 +103,7 @@ USB and Bluetooth "air" remotes act as keyboards, so any of them should work.
 | Enter (OK) | Clicks what is under the pointer, or the link with the ring around it |
 | Hold Enter | Switches between cursor mode and link mode |
 | Esc, Backspace or Back | Leaves a text field, then a dialog or full-screen video, then goes back a page, then shows the start screen |
-| Menu key, F1, or hold Esc | Opens the menu |
+| Menu key, F1, or hold Esc | Opens the menu, with the version underneath |
 | Play/Pause, Fast-forward, Rewind | Act on the page's video (FF/Rewind: 10 s) |
 | Next, Previous | Jump 60 s forward or back |
 | Channel up/down | Page up/down |

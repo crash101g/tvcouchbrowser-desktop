@@ -352,7 +352,7 @@ function render() {
       ...screens.address,
       tabs: tabs.length > 1 ? tabs.map((t, i) => ({ name: tabName(t), current: i === current })) : null,
     },
-    menu: screens.menu && { items: screens.menu.map(({ label, symbol }) => ({ label, symbol })) },
+    menu: screens.menu && { items: screens.menu.map(({ label, symbol }) => ({ label, symbol })), version: app.getVersion() },
     dialog: screens.dialog && {
       title: screens.dialog.title,
       at: screens.dialog.at,

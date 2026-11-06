@@ -33,10 +33,11 @@ input[type=text] { width: 100%; font: inherit; font-size: 1.4rem; color: #fff; b
 #address .menu-button, #address .new-tab { flex: none; width: 4rem; border-radius: .75rem; background: var(--tile); font-size: 1.6rem; }
 #address .hint { margin-top: .6rem; color: var(--dimmer); font-size: .9rem; }
 
-#menu { position: fixed; inset: 0; background: #000000dd; display: flex; align-items: center; justify-content: center; }
+#menu { position: fixed; inset: 0; background: #000000dd; display: flex; flex-direction: column; gap: 1rem; align-items: center; justify-content: center; }
 #menu .grid { display: grid; grid-template-columns: repeat(5, 11rem); gap: 1rem; }
 #menu .tile { height: 7.5rem; border-radius: .9rem; background: var(--tile); font-size: 1.05rem; padding: .4rem; }
 #menu .sym { display: block; font-size: 1.8rem; margin-bottom: .2rem; }
+#menu .version { color: var(--dim); font-size: 1.05rem; }
 
 #dialog { position: fixed; inset: 0; background: #0000008c; display: flex; align-items: center; justify-content: center; }
 .box { width: 46rem; max-height: 85vh; display: flex; flex-direction: column; gap: .5rem; padding: 1.3rem; border-radius: 1rem; background: var(--card); box-shadow: 0 1rem 3rem #000; }

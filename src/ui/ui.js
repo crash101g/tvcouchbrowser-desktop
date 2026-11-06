@@ -57,7 +57,7 @@ function drawMenu(s, box) {
     t.append(el('span', 'sym', item.symbol), el('span', '', item.label));
     grid.append(t);
   });
-  box.append(grid);
+  box.append(grid, el('div', 'version', `TVCouchBrowser ${s.version}`));
   box.onclick = (e) => { if (e.target === box) tv.back(); };
 }
 
